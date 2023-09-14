@@ -3,22 +3,25 @@ import db
 import os
 from telebot import types
 
+# Настояший токен: 6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I
+# Тестовый токен: 6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ
 
 bot = telebot.TeleBot("6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I")
-name = update_name = name_of_song = None
- # bot.remove_webhook()
-
-
-
+name = update_name = song_id = None
+# bot.remove_webhook()
 
 try:
     @bot.message_handler(commands=['start'])
     def start(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        markup.add(types.KeyboardButton("Найти текст песни"))
-        markup.add(types.KeyboardButton("Загрузить текст песни"))
-        markup.add(types.KeyboardButton("Удалить текст песни"))
-        markup.add(types.KeyboardButton("Обновить текст песни"))
+        button1 = (types.KeyboardButton("Найти текст песни"))
+        button2 = (types.KeyboardButton("Загрузить текст песни"))
+        button3 = (types.KeyboardButton("Удалить текст песни"))
+        button4 = (types.KeyboardButton("Обновить текст песни"))
+        button5 = (types.KeyboardButton("Список всех песен"))
+        markup.row(button1, button2)
+        markup.row(button3, button4)
+        markup.add(button5)
 
         bot.send_message(message.chat.id, "Добро пожаловать", reply_markup=markup)
 
@@ -37,13 +40,20 @@ try:
         elif message.text == "Обновить текст песни":
             bot.send_message(message.chat.id, "Нужно обновить текст этой песни:")
             bot.register_next_step_handler(message, wait_update_name)
+        elif message.text == "Список всех песен":
+            list_of_song_name = db.list_of_all_songs()
+            bot.send_message(message.chat.id, f"Вот список всех песен:\n{list_of_song_name}")
+
+
 
 
     def wait_answer(message):
-        global name_of_song
+        global song_id
         try:
             name_of_song = message.text
-            song_text = db.text_search(name_of_song)  # results = db.text_search
+            result = db.text_search(name_of_song)  # results = db.text_search
+            song_id = result[0]
+            song_text = result[1]
             markup = types.InlineKeyboardMarkup()
             markup.add(types.InlineKeyboardButton("Фото текста", callback_data="photo"))
             bot.send_message(message.chat.id, f"Вот текст вашей песни:\n{song_text}", parse_mode="html", reply_markup=markup)
@@ -59,7 +69,7 @@ try:
             bot.send_message(callback.message.chat.id, "Попробуйте использовать другой падеж или название/строчку песни")
             bot.register_next_step_handler(callback.message, wait_answer)
         elif callback.data == "photo":
-            photo = db.upload_photo_song(name_of_song)
+            photo = db.upload_photo_song(song_id)
             #get_image = open(photo_path, "rb")
             bot.send_photo(callback.message.chat.id, photo)
             bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id,
@@ -106,16 +116,16 @@ try:
 
     def wait_photo(message):
         image = message.text
-        db.execute()
+
     bot.polling(none_stop=True)
 except BaseException as error:
     print(error)
-
+    os.system("python bot.py")
 # finally:
 #     @bot.message_handler(content_types=["text"])
 #     def check_answer(message):
 #         if message.text == "":
 #             bot.send_message(message.chat.id, "Произошла какая-то непредвиденная ошибка")
-    os.system("python bot.py")
+
 
 

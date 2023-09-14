@@ -1,6 +1,5 @@
 import sqlite3
 
-
 def execute(request, __parameters):
     conn = sqlite3.connect("SongBD.db")
     cursor = conn.cursor()
@@ -12,22 +11,32 @@ def execute(request, __parameters):
 def text_search(search):
     conn = sqlite3.connect('SongBD.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT text FROM song WHERE name LIKE '%" + search + "%' OR text LIKE '%" + search + "%'")
+    cursor.execute("SELECT id, text FROM song WHERE name LIKE '%" + search + "%' OR text LIKE '%" + search + "%'")
     found_text = cursor.fetchall()[0]
     cursor.close()
     conn.close()
-    return found_text[0]
+    return found_text
 
-def upload_photo_song(name_of_song):
+def upload_photo_song(song_id):
     conn = sqlite3.connect('SongBD.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, photo FROM song WHERE name LIKE '%" + name_of_song + "%'")
+    cursor.execute("SELECT photo FROM song WHERE id = ?", [song_id])
     record = cursor.fetchone()
-    photo_id = record[0]
-    photo = record[1]
-    path = f"./image/photo{photo_id}.jpg"
+    photo = record[0]
+    cursor.close()
+    conn.close()
     return photo
 
+def list_of_all_songs(list_of_song_name=""):
+    conn = sqlite3.connect('SongBD.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM song")
+    result = cursor.fetchall()
+    for name_of_song in result:
+        list_of_song_name += name_of_song[0]
+    cursor.close()
+    conn.close()
+    return list_of_song_name
 
 def download_song_text(name, text):
     execute("INSERT INTO song (name, text) VALUES (?, ?)", (name, text))
@@ -37,7 +46,6 @@ def delite_song_text(delit_name):
 
 def update_song_text(update_text, update_name):
     execute("UPDATE song SET text = ? WHERE name = ?", (update_text, update_name))
-
 
 
 #Загрузка текстов и изображений через файлы
@@ -59,6 +67,9 @@ def import_image():
         image = photo.read()
         execute("UPDATE song SET photo = ? WHERE id = ?", (image, x))
 
+ #photo_id = record[0]
+ #path = f"./image/photo{photo_id}.jpg"
+
 # def search_song_infile(query):
 #     results = []
 #     for x in range(1, 34):
@@ -69,5 +80,6 @@ def import_image():
 #                     print(results)
 
 
-# import_text_of_song()
+#import_text_of_song()
 #import_image()
+
