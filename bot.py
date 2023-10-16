@@ -6,7 +6,7 @@ from telebot import types
 # Настояший токен: 6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I
 # Тестовый токен: 6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ
 
-bot = telebot.TeleBot("6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I")
+bot = telebot.TeleBot("6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ")
 name = update_name = song_id = None
 # bot.remove_webhook()
 
@@ -95,15 +95,19 @@ try:
     def wait_delit_name(message):
         try:
             delit_name = message.text
-            db.delite_song_text(delit_name)
+            result = db.text_search(delit_name)  # results = db.text_search
+            delit_id = result[0]
+            db.delite_song_text(delit_id)
             bot.send_message(message.chat.id, "Песня успешна удалена")
         except TypeError:
             bot.send_message(message.chat.id, "Этой песни ещё/уже нет в базе данных")
 
     def wait_update_name(message):
-        global update_name
+        global song_id
         try:
             update_name = message.text
+            result = db.text_search(update_name)  # results = db.text_search
+            song_id = result[0]
             bot.send_message(message.chat.id, "Отправте текст песни в чат:")
             bot.register_next_step_handler(message, wait_update_text)
         except TypeError:
@@ -111,7 +115,7 @@ try:
 
     def wait_update_text(message):
         update_text = message.text
-        db.update_song_text(update_text, update_name)
+        db.update_song_text(update_text, song_id)
         bot.send_message(message.chat.id, "Текст песни успешно обнавлен")
 
     def wait_photo(message):
@@ -119,7 +123,7 @@ try:
 
     bot.polling(none_stop=True)
 except BaseException as error:
-    print(error)
+    print(type(error), error)
     os.system("python bot.py")
 # finally:
 #     @bot.message_handler(content_types=["text"])

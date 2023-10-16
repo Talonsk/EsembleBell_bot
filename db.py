@@ -11,7 +11,7 @@ def execute(request, __parameters):
 def text_search(search):
     conn = sqlite3.connect('SongBD.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, text FROM song WHERE name LIKE '%" + search + "%' OR text LIKE '%" + search + "%'")
+    cursor.execute("SELECT id, text FROM song WHERE name LIKE '%"+search+"%' OR text LIKE + '%"+search+"%'")
     found_text = cursor.fetchall()[0]
     cursor.close()
     conn.close()
@@ -39,19 +39,20 @@ def list_of_all_songs(list_of_song_name=""):
     return list_of_song_name
 
 def download_song_text(name, text):
+    name += "\n"
     execute("INSERT INTO song (name, text) VALUES (?, ?)", (name, text))
 
-def delite_song_text(delit_name):
-    execute('DELETE FROM song WHERE name = ?', [delit_name])
+def delite_song_text(delit_id):
+    execute('DELETE FROM song WHERE id = ?', [delit_id])
 
-def update_song_text(update_text, update_name):
-    execute("UPDATE song SET text = ? WHERE name = ?", (update_text, update_name))
+def update_song_text(update_text, song_id):
+    execute("UPDATE song SET text = ? WHERE id = ?", (update_text, song_id))
 
 
 #Загрузка текстов и изображений через файлы
 def import_text_of_song():
     result = []
-    for x in range(1, 34):
+    for x in range(1, 40):
         text = open(f"./text/text{x}.txt", "r", encoding="utf-8")
         for line in text:
             result.append(line)
@@ -61,8 +62,22 @@ def import_text_of_song():
         execute("INSERT INTO song (name, text) VALUES (?, ?)", (name_of_song, text_of_song))
         result.clear()
 
+def update_text_of_song():
+    result = []
+    # max_id = execute("SELECT MAX(id) FROM song", [])
+    # print(max_id)
+    for x in range(1, 40):
+        text = open(f"./text/text{x}.txt", "r", encoding="utf-8")
+        for line in text:
+            result.append(line)
+        name_of_song = result[0]
+        result.remove(name_of_song)
+        text_of_song = ''.join(result)
+        execute("UPDATE song SET text = ?, name = ? WHERE id = ?", (text_of_song, name_of_song, x))
+        result.clear()
+
 def import_image():
-    for x in range(1, 34):
+    for x in range(1, 40):
         photo = open(f"./image/photo{x}.jpg", "rb")
         image = photo.read()
         execute("UPDATE song SET photo = ? WHERE id = ?", (image, x))
@@ -81,5 +96,6 @@ def import_image():
 
 
 #import_text_of_song()
+#update_text_of_song()
 #import_image()
 
