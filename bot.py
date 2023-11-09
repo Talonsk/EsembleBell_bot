@@ -6,7 +6,7 @@ from telebot import types
 # Настояший токен: 6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I
 # Тестовый токен: 6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ
 
-bot = telebot.TeleBot("6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ")
+bot = telebot.TeleBot("6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I")
 name = update_name = song_id = None
 # bot.remove_webhook()
 
@@ -49,18 +49,18 @@ try:
 
     def wait_answer(message):
         global song_id
-        try:
-            name_of_song = message.text
-            result = db.text_search(name_of_song)  # results = db.text_search
-            song_id = result[0]
-            song_text = result[1]
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("Фото текста", callback_data="photo"))
-            bot.send_message(message.chat.id, f"Вот текст вашей песни:\n{song_text}", parse_mode="html", reply_markup=markup)
-        except (TypeError, IndexError):
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("Попробовать ещё раз", callback_data="try_again"))
-            bot.send_message(message.chat.id, "Такой песни нет в базе данных", reply_markup=markup)
+        # try:
+        name_of_song = message.text
+        result = db.text_search(name_of_song)  # results = db.text_search
+        song_id = result[0]
+        song_text = result[1]
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("Фото текста", callback_data="photo"))
+        bot.send_message(message.chat.id, f"Вот текст вашей песни:\n{song_text}", parse_mode="html", reply_markup=markup)
+        # except (TypeError, IndexError):
+        #     markup = types.InlineKeyboardMarkup()
+        #     markup.add(types.InlineKeyboardButton("Попробовать ещё раз", callback_data="try_again"))
+        #     bot.send_message(message.chat.id, "Такой песни нет в базе данных", reply_markup=markup)
 
 
     @bot.callback_query_handler(func=lambda callback: True)
@@ -69,11 +69,14 @@ try:
             bot.send_message(callback.message.chat.id, "Попробуйте использовать другой падеж или название/строчку песни")
             bot.register_next_step_handler(callback.message, wait_answer)
         elif callback.data == "photo":
-            photo = db.upload_photo_song(song_id)
-            #get_image = open(photo_path, "rb")
-            bot.send_photo(callback.message.chat.id, photo)
-            bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id,
-                                          reply_markup=None)
+            try:
+                photo = db.upload_photo_song(song_id)
+                #get_image = open(photo_path, "rb")
+                bot.send_photo(callback.message.chat.id, photo)
+                bot.edit_message_reply_markup(chat_id=callback.message.chat.id, message_id=callback.message.message_id,
+                                              reply_markup=None)
+            except TypeError:
+                bot.send_message(callback.message.chat.id, "Фота этого текста ещё нет в бд")
         elif callback.data == "add_photo":
             bot.send_message(callback.message.chat.id, "Отправте фото текста в чат")
             bot.register_next_step_handler(callback.message.chat.id, wait_photo)
@@ -99,7 +102,7 @@ try:
             delit_id = result[0]
             db.delite_song_text(delit_id)
             bot.send_message(message.chat.id, "Песня успешна удалена")
-        except TypeError:
+        except (TypeError, IndexError):
             bot.send_message(message.chat.id, "Этой песни ещё/уже нет в базе данных")
 
     def wait_update_name(message):
@@ -110,7 +113,7 @@ try:
             song_id = result[0]
             bot.send_message(message.chat.id, "Отправте текст песни в чат:")
             bot.register_next_step_handler(message, wait_update_text)
-        except TypeError:
+        except (TypeError, IndexError):
             bot.send_message(message.chat.id, "Такой песни нет в базе данных")
 
     def wait_update_text(message):
