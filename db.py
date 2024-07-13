@@ -3,10 +3,12 @@ import string
 def execute(request, __parameters):
     conn = sqlite3.connect("SongBD.db")
     cursor = conn.cursor()
-    cursor.execute(request, __parameters)
+    result = cursor.execute(request, __parameters)
+    result_performance = result.fetchall()
     conn.commit()
     cursor.close()
     conn.close()
+    return result_performance
 
 def text_search(search):
     conn = sqlite3.connect('SongBD.db')
@@ -16,7 +18,7 @@ def text_search(search):
     new_search = '%'+search_wo_punctuation+'%'
     cursor.execute("SELECT id, text FROM song WHERE low_name LIKE ? OR low_text LIKE ?", [new_search, new_search])
     text = cursor.fetchall()
-    print(cursor.fetchall())
+    # print(cursor.fetchall())
     found_text = text[0]
     cursor.close()
     conn.close()
@@ -101,7 +103,8 @@ def update_text_of_song():
         result.clear()
 
 def import_image():
-    for x in range(1, 52):
+    last_line_number = execute("SELECT MAX(id) FROM song", [])[0]
+    for x in range(1, last_line_number[0]+1):
         photo = open(f"./image/photo{x}.jpg", "rb")
         image = photo.read()
         execute("UPDATE song SET photo = ? WHERE id = ?", (image, x))

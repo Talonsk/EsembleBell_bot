@@ -6,7 +6,7 @@ from telebot import types
 # Настояший токен: 6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I
 # Тестовый токен: 6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ
 
-bot = telebot.TeleBot("6102946467:AAGfioeQanwYS-TSyxvQNtoeqdnt_xCL92I")
+bot = telebot.TeleBot("6580465120:AAEZNj0PJEUy88QrxVEt-WS32lTkhu0yENQ")
 name = update_name = song_id = None
 # bot.remove_webhook()
 
@@ -49,18 +49,18 @@ try:
 
     def wait_answer(message):
         global song_id
-        # try:
-        name_of_song = message.text
-        result = db.text_search(name_of_song)  # results = db.text_search
-        song_id = result[0]
-        song_text = result[1]
-        markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Фото текста", callback_data="photo"))
-        bot.send_message(message.chat.id, f"Вот текст вашей песни:\n{song_text}", parse_mode="html", reply_markup=markup)
-        # except (TypeError, IndexError):
-        #     markup = types.InlineKeyboardMarkup()
-        #     markup.add(types.InlineKeyboardButton("Попробовать ещё раз", callback_data="try_again"))
-        #     bot.send_message(message.chat.id, "Такой песни нет в базе данных", reply_markup=markup)
+        try:
+            name_of_song = message.text
+            result = db.text_search(name_of_song)  # results = db.text_search
+            song_id = result[0]
+            song_text = result[1]
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("Фото текста", callback_data="photo"))
+            bot.send_message(message.chat.id, f"Вот текст вашей песни:\n{song_text}", parse_mode="html", reply_markup=markup)
+        except (TypeError, IndexError):
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("Попробовать ещё раз", callback_data="try_again"))
+            bot.send_message(message.chat.id, "Такой песни нет в базе данных", reply_markup=markup)
 
 
     @bot.callback_query_handler(func=lambda callback: True)
